@@ -55,4 +55,6 @@ lib
 docs
 Debug
 .vs
+DrawingFrames/data
+DrawingFrames/results
 
