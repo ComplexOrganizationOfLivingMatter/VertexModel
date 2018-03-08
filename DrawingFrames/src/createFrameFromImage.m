@@ -16,9 +16,17 @@ function [ ] = createFrameFromImage( imgFile, fileName )
     vertices = verticesInfo.verticesPerCell;
     neighbours_vertices = verticesInfo.verticesConnectCells;
     
-%     [~, goodIds] = unique(vertcat(vertices{:}), 'rows');
-%     vertices = vertices (goodIds);
-%     neighbours_vertices = neighbours_vertices(goodIds, :);
+    [~, goodIds] = unique(vertcat(vertices{:}), 'rows');
+    vertices = vertices (goodIds);
+    neighbours_vertices = neighbours_vertices(goodIds, :);
+    
+    newOrderCells = [];
+    for numVertex = 1:length(vertices)
+        newCells = ismember(neighbours_vertices(numVertex, :), newOrderCells) == 0 & ismember(neighbours_vertices(numVertex, :), validCells);
+        if any(newCells)
+            newOrderCells = horzcat(newOrderCells, neighbours_vertices(numVertex, newCells));
+        end
+    end
     
     fileID = fopen(strcat('results/', fileName, '.frm'),'w');
     %NumVertices
@@ -37,7 +45,7 @@ function [ ] = createFrameFromImage( imgFile, fileName )
     
     %Cells: NumVertices NumCell Growing Dying CellLine LastDivTime TimeInG0
     %GrowthStartTime IndicesVertices CellStatus
-    for numCell = validCells
+    for numCell = newOrderCells
         %verticesNumCell = arrayfun(@(x) any(numCell, x), neighbours_vertices);
         verticesNumCell = any(neighbours_vertices == numCell, 2);
         verticesActualCell = find(verticesNumCell);
