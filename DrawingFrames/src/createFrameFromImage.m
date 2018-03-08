@@ -16,9 +16,9 @@ function [ ] = createFrameFromImage( imgFile, fileName )
     vertices = verticesInfo.verticesPerCell;
     neighbours_vertices = verticesInfo.verticesConnectCells;
     
-    [~, goodIds] = unique(vertcat(vertices{:}), 'rows');
-    vertices = vertices (goodIds);
-    neighbours_vertices = neighbours_vertices(goodIds, :);
+%     [~, goodIds] = unique(vertcat(vertices{:}), 'rows');
+%     vertices = vertices (goodIds);
+%     neighbours_vertices = neighbours_vertices(goodIds, :);
     
     fileID = fopen(strcat('results/', fileName, '.frm'),'w');
     %NumVertices
@@ -27,7 +27,7 @@ function [ ] = createFrameFromImage( imgFile, fileName )
     %Vertices: Index coorX coorY
     for numVertex = 1:size(vertices, 1)
         coordinates = vertices{numVertex};
-        fprintf(fileID, '%i %d %d\n', numVertex, coordinates(2), coordinates(1));
+        fprintf(fileID, '%i %d %d\n', numVertex-1, coordinates(1), coordinates(2));
     end
     
     %NumCells
@@ -46,7 +46,7 @@ function [ ] = createFrameFromImage( imgFile, fileName )
         
 %         verticesToPaint = vertcat(vertices{verticesActualCell});
 %         plot(verticesToPaint(K, 1),verticesToPaint(K, 2),'r-',verticesToPaint(:, 1), verticesToPaint(:, 2),'b*')
-%         
+         
         verticesActualCell = verticesActualCell(K(1:end-1));
         
         %NumVertices NumCell Growing Dying CellLine
@@ -55,7 +55,7 @@ function [ ] = createFrameFromImage( imgFile, fileName )
         cl = clock;
         fprintf(fileID, '%i %g 108000 ', toc(tStart)*500, cl(end-1) + cl(end));
         %IndicesVertices
-        fprintf(fileID, '%i ', verticesActualCell);
+        fprintf(fileID, '%i ', verticesActualCell-1);
         %CellStatus
         fprintf(fileID, '%g\n', toc(tStart));
     end
