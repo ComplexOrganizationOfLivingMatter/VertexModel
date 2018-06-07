@@ -16,8 +16,11 @@ function [ ] = paintFrame( inputFile )
     numFrame = 1;
     numCell = 1;
     numVertex = 0;
-    actualFrame = [];
+    actualFrame = {};
     verticesActualCell = [];
+    
+    cellsColours = {};
+    
     for numRow = 1:size(fileInfo, 1)
         row = fileInfo{numRow};
         if isempty(strfind(row, 'Cell')) == 0
@@ -30,9 +33,14 @@ function [ ] = paintFrame( inputFile )
                 end
                 actualCell(numVertex+1, :) = horzcat(verticesActualCell(numVertex+1, :), verticesActualCell(1, :));
 
-                actualFrame = vertcat(actualFrame, actualCell);
+                actualFrame = vertcat(actualFrame, table(str2double(cellId), {actualCell}));
                 numCell = numCell + 1;
             end
+            
+            cellInfo = strsplit(row);
+                
+           	cellId = cellInfo{4};
+            
             numVertex = 1;
             verticesActualCell = [];
         elseif isempty(strfind(row, 'FRAME')) == 0
@@ -45,7 +53,8 @@ function [ ] = paintFrame( inputFile )
                 end
                 actualCell(numVertex+1, :) = horzcat(verticesActualCell(numVertex+1, :), verticesActualCell(1, :));
 
-                actualFrame = vertcat(actualFrame, actualCell);
+                actualFrame = vertcat(actualFrame, table(str2double(cellId), {actualCell}));
+                
                 numCell = numCell + 1;
             end
             numVertex = 1;
