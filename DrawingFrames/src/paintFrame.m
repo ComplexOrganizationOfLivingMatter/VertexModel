@@ -77,11 +77,28 @@ function [ ] = paintFrame( inputFile )
 
     for numFrame = 1:size(frames, 2)
         actualFrame = frames{numFrame};
-        nVectors = size(actualFrame,1);
+        actualEdges = actualFrame{:, 2};
+        actualEdges = vertcat(actualEdges{:});
+        nVectors = size(actualEdges,1);
         h = figure('visible', 'off');
         hold on
+        
+        rareCells = actualFrame(actualFrame.Var1 ~= 0, :);
+        
+        for numCell = 1:size(rareCells)
+            actualCell = rareCells{numCell, 2};
+            actualCell = actualCell{1};
+            rightSide = horzcat(actualCell(:, 1), actualCell(:, 2));
+            leftSide = horzcat(actualCell(:, 3), actualCell(:, 4));
+            allVertices = unique(vertcat(rightSide, leftSide), 'rows');
+            orderVerticesV1=convhull(allVertices(:, 1), allVertices(:, 2));
+            sortedVerticesV1=actualCell(orderVerticesV1,1:2);
+            cellFigure = alphaShape(sortedVerticesV1(:, 1), sortedVerticesV1(:, 2), 50);
+            plot(cellFigure, 'FaceColor', [0 0 1], 'EdgeColor', 'none', 'FaceAlpha', 1);
+        end
+        
         for vecNo = 1:nVectors
-            plot ([actualFrame(vecNo,1);actualFrame(vecNo,3)],[actualFrame(vecNo,2);actualFrame(vecNo,4)],'k')
+            plot ([actualEdges(vecNo,1);actualEdges(vecNo,3)],[actualEdges(vecNo,2);actualEdges(vecNo,4)],'k')
         end
         axis equal
         p = gca;
