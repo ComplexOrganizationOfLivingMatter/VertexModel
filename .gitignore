@@ -52,7 +52,7 @@ Temporary Items
 dll
 VertexModel
 libraries
-lib
+lib/*
 docs
 Debug
 .vs
