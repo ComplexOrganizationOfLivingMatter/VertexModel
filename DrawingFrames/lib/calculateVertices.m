@@ -2,9 +2,10 @@ function [ verticesInfo ] = calculateVertices( L_img, neighbours )
  
     % With a labelled image as input, the objective is get all vertex for each
     % cell
+    % We alse capture the border vertices
 
-    ratio=2;
-    se=strel('disk',ratio);
+    ratio=3;
+    se=strel('square',ratio);
 
 
     neighboursVertices = buildTripletsOfNeighs( neighbours );%intersect dilatation of each cell of triplet
@@ -55,25 +56,28 @@ function [ verticesInfo ] = calculateVertices( L_img, neighbours )
     connectingBorderCells = zeros(size(verticesOfBorders, 1), 2);
     
     for numVertex = 1:size(verticesOfBorders, 1)
+        row = verticesOfBorders(numVertex, 1);
+        col = verticesOfBorders(numVertex, 2);
         if row == 1 || row == size(L_img, 1)
-            
-            
+            connectingBorderCells(numVertex, 1) = L_img(row, col+1);
+            connectingBorderCells(numVertex, 2) = L_img(row, col-1);
         else
-            connectingBorderCells
-            L_img(row(numVertex)+2, col(numVertex))
-            L_img(row(numVertex)-2, col(numVertex))
-            
+            connectingBorderCells(numVertex, 1) = L_img(row+1, col);
+            connectingBorderCells(numVertex, 2) = L_img(row-1, col);
         end
     end
+    connectingBorderCells(:, 3) = nan;
     
     %Add corners as vertex of a cell
     cornerVertices = {[1, 1]; [1, size(L_img, 2)]; [size(L_img, 1), 1]; [size(L_img, 1), size(L_img, 2)]};
     cornerNeighbours = vertcat(L_img(1,1), L_img(1, end), L_img(end, 1), L_img(end, end));
+    cornerNeighbours(:, 2:3) = nan;
     
-    verticesInfo.verticesPerCell = vertices;
-    verticesInfo.verticesConnectCells = neighboursVertices;
-
-
-
+    verticesInfo.verticesPerCell = vertcat(vertices, mat2cell(verticesOfBorders, ones(size(verticesOfBorders, 1), 1), 2), cornerVertices);
+    verticesInfo.verticesConnectCells = vertcat(neighboursVertices, connectingBorderCells, cornerNeighbours);
+    
+    verticesInfo.verticesConnectCells = sort(verticesInfo.verticesConnectCells, 2);
+    [verticesInfo.verticesConnectCells, indices] = sortrows(verticesInfo.verticesConnectCells);
+    verticesInfo.verticesPerCell = verticesInfo.verticesPerCell(indices);
 end
 
