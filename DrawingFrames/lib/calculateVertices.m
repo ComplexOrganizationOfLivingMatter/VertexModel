@@ -16,15 +16,49 @@ function [ verticesInfo ] = calculateVertices( L_img, neighbours )
     % For larger images it improves a lot the efficiency
     
     dilatedCells=cell(max(max(L_img)),1);
-    for i=1:max(max(L_img))
+    vertexWithFourFold = cell(max(max(L_img)), 1);
+    for numCell=1:max(max(L_img))
         BW=zeros(size(L_img));
-        BW(L_img==i)=1;
+        BW(L_img==numCell)=1;
         BW_dilated=imdilate(bwperim(BW),se);
-        dilatedCells{i}=BW_dilated;
+        dilatedCells{numCell}=BW_dilated;
+        
+        %Check if a forfold exists
+        actualNeighbours = neighbours{numCell};
+        vertexWithFourFold(numCell) = {actualNeighbours(cellfun(@(x) sum(ismember(actualNeighbours, x))>2, neighbours(actualNeighbours)))'};
     end
     
     borderImg=zeros(size(L_img));
     borderImg(L_img==0)=1;
+    
+    cellsWithAFourFold = find(cellfun(@isempty, vertexWithFourFold) == 0);
+    vertexWithFourFold(cellfun(@isempty, vertexWithFourFold)) = {[0 0]};
+    
+    vertexWithFourFold = cell2mat(vertexWithFourFold);
+    fourFoldMotifs = [];
+    
+    for numCell = 1:length(cellsWithAFourFold)
+        actualCell = cellsWithAFourFold(numCell);
+        if ismember(actualCell, fourFoldMotifs) == 0
+            correspondanceBetweenExistingFourFold = any(ismember(fourFoldMotifs, vertexWithFourFold(actualCell, :)), 2);
+            if any(correspondanceBetweenExistingFourFold)
+                for numCorr = 1:length(correspondanceBetweenExistingFourFold)
+                    if correspondanceBetweenExistingFourFold(numCorr)
+                        newCells = unique(horzcat(fourFoldMotifs(correspondanceBetweenExistingFourFold(numCorr), :), actualCell));
+                        newCells(newCells==0) = [];
+                        fourFoldMotifs(correspondanceBetweenExistingFourFold(numCorr), 1:length(newCells)) = newCells;
+                    end
+                end
+            else
+                fourFoldMotifs(end+1, 1:4) = horzcat(vertexWithFourFold(actualCell, :), actualCell, 0);
+            end
+        end
+    end
+    
+    if (isempty(fourFoldMotifs) == 0)
+        warning('Some fourfold vertices exist: %s', mat2str(fourFoldMotifs(1, :)));
+    end
+    
     for numTriplet = 1 : size(neighboursVertices,1)
 
         BW1_dilate=dilatedCells{neighboursVertices(numTriplet, 1),1};
@@ -35,6 +69,10 @@ function [ verticesInfo ] = calculateVertices( L_img, neighbours )
         %It is better use '&' than '.*' in this function
         [row,col]=find((BW1_dilate.*BW2_dilate.*BW3_dilate.*borderImg)==1);
 
+        possibleFourFoldVertex = unique(L_img(BW1_dilate & BW2_dilate & BW3_dilate));
+        
+        possibleFourFoldVertex = possibleFourFoldVertex(possibleFourFoldVertex~=0);
+        
         if length(row)>1
             vertices{numTriplet} = round(mean([row,col]));
         else
