@@ -55,12 +55,17 @@ function [ ] = createFrameFromImage( imgFile, fileName )
         verticesNumCell = any(neighbours_vertices == numCell, 2);
         verticesActualCell = find(verticesNumCell);
         
-%         K = convhull(vertcat(vertices{verticesNumCell}));
-%         
+        
+        K = convhull(vertcat(vertices{verticesNumCell}));
+        boundaryThreshold = 0.1;
+        while length(K)-1 ~= length(verticesActualCell)
+            K = boundary(vertcat(vertices{verticesNumCell}), boundaryThreshold);
+            boundaryThreshold = boundaryThreshold + 0.1;
+        end
 %         verticesToPaint = vertcat(vertices{verticesActualCell});
 %         plot(verticesToPaint(K, 1),verticesToPaint(K, 2),'r-',verticesToPaint(:, 1), verticesToPaint(:, 2),'b*')
 %         hold on;
-%         verticesActualCell = verticesActualCell(K(1:end-1));
+        verticesActualCell = verticesActualCell(K(1:end-1));
         
         %NumVertices NumCell Growing Dying CellLine
         fprintf(fileID, '%i %i 0 0 0 ', length(verticesActualCell), numCell-1);
